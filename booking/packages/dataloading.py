@@ -2,54 +2,19 @@ import pandas as pd
 import re
 from selenium import webdriver
 from packages.selenium_setup import *
-
-# class DataCollection:
-#     def __init__(self, driver):
-#         self.driver = driver
-
-#     def get_hotel_information(self):
-#         '''
-#         Collects the information of the hotels in the search results.
-#         '''
-#         rating = '//div[@class="a3b8729ab1 d86cee9b25"]'
-#         name = '//div[@class="f6431b446c a15b38c233"]'
-#         price = '//span[@class="f6431b446c fbfd7c1165 e84eb96b1f"]'
-#         location = '//span[@class="aee5343fdb def9bc142a" and @data-testid="address"]'
-#         center = '//span[@data-testid="distance"]'
-#         stars = '//span[@class="f419a93f12"]//div[@class="b3f3c831be"]'
-
-#         ratings = self.driver.find_elements('xpath', rating)
-#         names = self.driver.find_elements('xpath', name)
-#         prices = self.driver.find_elements('xpath', price)
-#         locations = self.driver.find_elements('xpath', location)
-#         centers = self.driver.find_elements('xpath', center)
-#         stars = self.driver.find_elements('xpath', stars)
-
-#         link_elements = self.driver.find_elements(By.CSS_SELECTOR, 'a[data-testid="title-link"]')
-#         links = [element.get_attribute("href") for element in link_elements]
-
-#         data = []
-#         for i in range(len(name)):
-#             data.append({
-#                 'name': names[i].text, 
-#                 'rating': ratings[i].text, 
-#                 'price': prices[i].text, 
-#                 'location': locations[i].text, 
-#                 'link': links[i]
-#             })
-
-#         df = pd.DataFrame(data, columns=['name', 'rating', 'price', 'location', 'link'])
-        
-#         return df
+import requests
+from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor
     
 class DataCollection:
     def __init__(self, driver):
         self.driver = driver
-
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+    
     def get_hotel_information(self):
-        '''
-        Collects the information of the hotels in the search results.
-        '''
+        '''Collects the information of the hotels in the search results.'''
         property_xpath = '//div[@data-testid="property-card-container"]'
         name_xpath = './/div[@class="f6431b446c a15b38c233"]'
         rating_xpath = './/div[@class="a3b8729ab1 d86cee9b25"]'
@@ -120,5 +85,38 @@ class DataCollection:
             })
 
         df = pd.DataFrame(data, columns=['name', 'rating', 'stars', 'price', 'location', 'distance', 'link'])
+        return df
+    
+    def fetch_description(self, link):
+        """Fetches the hotel description from its webpage."""
+        if not link or pd.isna(link):
+            return "No link available"
+
+        try:
+            response = requests.get(link, headers=self.headers, timeout=10)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                element = soup.find(attrs={"data-testid": "property-description"})
+                return element.text if element else "Description not found"
+            return f"Error {response.status_code}"
+        except requests.Timeout:
+            return "Request timed out"
+        except requests.RequestException:
+            return "Request failed"
+
+    def get_all_hotel_data(self):
+        """Runs the full process: scrapes hotel info and descriptions."""
+        df = self.get_hotel_information()
+
+        if 'link' in df and not df['link'].isnull().all():
+            valid_links = df['link'].dropna().astype(str)
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                descriptions = list(executor.map(self.fetch_description, valid_links))
+            
+            # Assign descriptions back to DataFrame
+            df.loc[df['link'].notna(), 'description'] = descriptions
+        else:
+            df['description'] = "No link available"
 
         return df
+    
