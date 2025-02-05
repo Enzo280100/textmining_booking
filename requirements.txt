@@ -11,3 +11,5 @@ selenium
 bs4
 spacy
 concurrent.futures
+wordcloud
+nltk
