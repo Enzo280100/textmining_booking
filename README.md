@@ -5,22 +5,23 @@ This project investigates the effect of a major annual event in Barcelona on ren
 
 ## Project Structure
 ```
-booking/
-│── packages/
-│   │── __pycache__/
-│   │── __init__.py               # Package initialization file
-│   │── dataloading.py            # Data loading and cleaning
-│   │── processing.py             # Data processing
-│   │── scraper.py                # Scraper to obtain data from Booking
-│   │── selenium_setup.py         # Selenium setup for web scraping
-│── Barcelona_MWC.csv             # Extracted data from Barcelona
-│── Milan_MWC.csv                 # Extracted data from the control city (Milan)
-│── geckodriver.exe               # Driver for Selenium (Firefox)
-│── ITM_HW1.ipynb                 # Notebook with exploratory analysis and regressions
-│── hw1.pdf                       # Document with project details
-│── README.md                     # Project description and structure
-│── requirements.txt               # Necessary dependencies for running the project
-│── setup.py                       # Setup and installation script
+textmining_booking/
+|-- booking/
+|   |-- packages/
+|   |   |-- __pycache__/
+|   |   |-- __init__.py         # Package initialization file
+|   |   |-- dataloading.py      # Data loading and cleaning
+|   |   |-- processing.py       # Data processing
+|   |   |-- scraper.py          # Web scraper from Booking
+|   |   |-- selenium_setup.py   # Selenium setup for scraping
+|   |-- Barcelona_MWC.csv       # Data extracted from Barcelona
+|   |-- Milan_MWC.csv           # Data extracted from Milan
+|   |-- geckodriver.exe         # Selenium driver for Firefox
+|-- ITM_HW1.ipynb               # Principal Notebook
+|-- hw1.pdf                     # Document with project requirements
+|-- README.md                   # Description the project structure
+|-- requirements.txt            # Dependencies required to run
+|-- setup.py                    # Installation and setup script
 ```
 
 ## Installation and Setup
